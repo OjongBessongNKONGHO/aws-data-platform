@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────────────────────
+# Production Environment Variable Values — ojong-data-platform
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to version control
+# ─────────────────────────────────────────────────────────────
+
+project_name = "ojong-data-platform"
+aws_region   = "eu-west-3"
+
+# S3 bucket name — must be globally unique
+bucket_name = "ojong-data-lake-prod-YOUR-ACCOUNT-ID"
+
+# EC2 key pair name
+key_pair_name = "ojong-data-platform-key-prod"
+
+# RDS password — use a strong password in production
+db_password = "REPLACE_WITH_STRONG_PASSWORD"
+
+# Email for CloudWatch production alerts
+alarm_email = "your-email@example.com"
+
+# Production uses larger instances than dev
+ec2_instance_type = "t3.small"
+db_instance_class = "db.t3.small"
