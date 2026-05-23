@@ -192,9 +192,9 @@ resource "aws_cloudwatch_dashboard" "main" {
           metrics = [
             ["AWS/EC2", "CPUUtilization", "InstanceId", var.ec2_instance_id]
           ]
-          view    = "timeSeries"
-          stat    = "Average"
-          region  = "eu-west-3"
+          view   = "timeSeries"
+          stat   = "Average"
+          region = "eu-west-3"
         }
       },
       {

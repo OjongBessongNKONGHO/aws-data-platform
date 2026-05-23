@@ -41,10 +41,10 @@ resource "aws_db_instance" "postgres" {
   maintenance_window      = "Mon:04:00-Mon:05:00"
 
   # Production settings
-  multi_az               = false
-  publicly_accessible    = false
-  deletion_protection    = false
-  skip_final_snapshot    = true
+  multi_az            = false
+  publicly_accessible = false
+  deletion_protection = false
+  skip_final_snapshot = true
 
   # Performance Insights — free tier monitoring
   performance_insights_enabled = false
