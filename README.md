@@ -90,7 +90,7 @@ flowchart TD
     EC2 -->|via IAM role| S3
     EC2 -->|metrics| CW
     CW -->|alarm triggered| SNS
-    SNS -->|email| Engineer[👤 Engineer]
+   SNS -->|email| Engineer[👤 Ojong Bessong\nData Engineer on-call]
     ROLE -->|attached to| EC2
 ```
 
