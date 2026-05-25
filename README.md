@@ -51,41 +51,56 @@ terraform destroy  →  41 resources deleted in ~3 minutes
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    AWS eu-west-3 (Paris)                             │
-│                                                                       │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                    VPC  10.0.0.0/16                          │    │
-│  │                                                               │    │
-│  │  ┌─────────────────────┐    ┌─────────────────────────────┐  │    │
-│  │  │   Public Subnet     │    │     Private Subnet          │  │    │
-│  │  │   10.0.1.0/24       │    │     10.0.10.0/24            │  │    │
-│  │  │                     │    │                             │  │    │
-│  │  │  ┌───────────────┐  │    │  ┌─────────────────────┐   │  │    │
-│  │  │  │ EC2 t3.micro  │──┼────┼─▶│ RDS PostgreSQL      │   │  │    │
-│  │  │  │ 35.181.130.129│  │    │  │ db.t3.micro         │   │  │    │
-│  │  │  │ Docker+Python │  │    │  │ weather_platform    │   │  │    │
-│  │  │  └───────────────┘  │    │  └─────────────────────┘   │  │    │
-│  │  └─────────────────────┘    └─────────────────────────────┘  │    │
-│  │            │                                                   │    │
-│  │   Internet Gateway                                             │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                       │
-│  S3 Data Lake          CloudWatch Dashboard      SNS Alerts          │
-│  ojong-data-lake-...   4 metric widgets          Email notifications │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph AWS eu-west-3 Paris
+        subgraph VPC 10.0.0.0/16
+            subgraph Public Subnet 10.0.1.0/24
+                EC2[🖥️ EC2 t3.micro\nDocker + Python\nElastic IP]
+                IGW[🌐 Internet Gateway]
+            end
+
+            subgraph Private Subnet 10.0.10.0/24
+                RDS[(🗄️ RDS PostgreSQL\n15.10 db.t3.micro\nweather_platform)]
+            end
+
+            subgraph Security
+                SG1[🔒 EC2 Security Group\nSSH port 22\nHTTP port 80]
+                SG2[🔒 RDS Security Group\nPort 5432 from EC2 only]
+            end
+        end
+
+        subgraph Storage
+            S3[(☁️ S3 Data Lake\nAES256 encrypted\nraw / processed / archive)]
+        end
+
+        subgraph Monitoring
+            CW[📊 CloudWatch\n4 metric alarms\nDashboard]
+            SNS[📧 SNS Alerts\nEmail notifications]
+        end
+
+        subgraph IAM
+            ROLE[🔑 EC2 IAM Role\nS3 read/write\nCloudWatch logs]
+        end
+    end
+
+    Internet -->|HTTPS| IGW
+    IGW --> EC2
+    EC2 -->|port 5432| RDS
+    EC2 -->|via IAM role| S3
+    EC2 -->|metrics| CW
+    CW -->|alarm triggered| SNS
+    SNS -->|email| Engineer[👤 Engineer]
+    ROLE -->|attached to| EC2
 ```
 
 ### Data Flow
 
-1. EC2 instance runs the data pipeline (Docker + Python pre-installed via user_data)
-2. Pipeline reads/writes data to S3 data lake via IAM role — no credentials on server
-3. Pipeline connects to RDS PostgreSQL in private subnet — never exposed to internet
-4. CloudWatch collects EC2 and RDS metrics every 5 minutes
-5. SNS sends email alerts when CPU exceeds 80%, storage drops below 5GB, or instance fails health check
-
----
+1. **EC2 instance** runs the data pipeline — Docker and Python pre-installed via user_data script on first boot
+2. **Pipeline reads/writes** to S3 data lake via IAM role — no credentials stored on the server
+3. **Pipeline connects** to RDS PostgreSQL in the private subnet — database never exposed to internet
+4. **CloudWatch** collects EC2 and RDS metrics every 5 minutes — dashboard shows CPU, connections and storage
+5. **SNS sends email alerts** when CPU exceeds 80%, storage drops below 5GB or instance fails health check
 
 ## 📁 Project Structure
 
