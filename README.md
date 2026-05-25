@@ -5,10 +5,13 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.10-316192?style=flat&logo=postgresql)
 ![IaC](https://img.shields.io/badge/Infrastructure-as--Code-4A90D9?style=flat)
 ![Status](https://img.shields.io/badge/Status-Deployed-success?style=flat)
+![CI](https://github.com/OjongBessongNKONGHO/aws-data-platform/actions/workflows/ci.yml/badge.svg)
 
 A production-grade cloud data platform provisioned entirely with Terraform on AWS eu-west-3 (Paris). A single `terraform apply` command deploys **41 AWS resources** across 5 modules: networking, compute, storage, database and monitoring — fully reproducible, version-controlled and destroyable with a single command.
 
 This is the third project in my Data Engineering portfolio. Projects 1 and 2 built real pipelines running locally in Docker. This project provisions the cloud infrastructure those pipelines would run on in production.
+
+---
 
 ## 📸 Live Infrastructure Screenshots
 
@@ -29,7 +32,6 @@ This is the third project in my Data Engineering portfolio. Projects 1 and 2 bui
 **CloudWatch Dashboard — Real EC2 metrics**
 ![CloudWatch Dashboard](screenshots/cloudwatch-dashboard.png)
 
-
 ---
 
 ## ⚡ What Gets Deployed
@@ -46,6 +48,24 @@ terraform destroy  →  41 resources deleted in ~3 minutes
 | **Storage** | S3 data lake with AES256 encryption, versioning, lifecycle policies, raw/processed/archive/logs folders |
 | **Database** | RDS PostgreSQL 15.10 db.t3.micro in private subnet, subnet group |
 | **Monitoring** | CloudWatch dashboard, 4 metric alarms, SNS topic, email subscription, 2 log groups |
+
+---
+
+## 📊 Infrastructure Metrics
+
+| Metric | Value |
+|---|---|
+| Total AWS resources | 41 — provisioned with a single terraform apply |
+| Deployment time | ~5 minutes |
+| Destroy time | ~3 minutes |
+| AWS region | eu-west-3 — Paris |
+| EC2 instance type | t3.micro — Docker and Python pre-installed via user_data |
+| RDS instance class | db.t3.micro — PostgreSQL 15.10 in private subnet |
+| CloudWatch alarms | 4 — EC2 CPU, EC2 status check, RDS CPU, RDS storage |
+| Terraform modules | 5 — networking, compute, storage, database, monitoring |
+| Environments | dev deployed — prod environment configured and ready |
+| CI pipeline | terraform fmt and validate passing on every push |
+| Cost during development | $0 — $100 AWS Academy credits used |
 
 ---
 
@@ -90,7 +110,7 @@ flowchart TD
     EC2 -->|via IAM role| S3
     EC2 -->|metrics| CW
     CW -->|alarm triggered| SNS
-   SNS -->|email| Engineer[👤 Ojong Bessong\nData Engineer on-call]
+    SNS -->|email| Engineer[👤 Ojong Bessong\nData Engineer on-call]
     ROLE -->|attached to| EC2
 ```
 
@@ -101,6 +121,8 @@ flowchart TD
 3. **Pipeline connects** to RDS PostgreSQL in the private subnet — database never exposed to internet
 4. **CloudWatch** collects EC2 and RDS metrics every 5 minutes — dashboard shows CPU, connections and storage
 5. **SNS sends email alerts** when CPU exceeds 80%, storage drops below 5GB or instance fails health check
+
+---
 
 ## 📁 Project Structure
 
@@ -128,6 +150,10 @@ aws-data-platform/
 │       ├── main.tf           # 9 resources
 │       ├── variables.tf
 │       └── outputs.tf
+│
+├── environments/
+│   ├── dev/                  # Development environment — t3.micro instances
+│   └── prod/                 # Production environment — t3.small instances, ready to deploy
 │
 ├── main.tf                   # Root module — provider config and module wiring
 ├── variables.tf              # All input variable definitions
@@ -159,8 +185,6 @@ aws-data-platform/
 ---
 
 ## 💰 Cost Awareness
-
-All resources use free tier eligible instance types:
 
 | Resource | Type | Free Tier | Monthly Cost After Free Tier |
 |---|---|---|---|
@@ -295,15 +319,11 @@ Infrastructure as Code means the entire environment can be recreated from scratc
 
 ## 🔗 Portfolio Context
 
-This project is the cloud infrastructure layer for my data engineering portfolio:
-
 | Project | What it does | Stack |
 |---|---|---|
 | [Weather ETL Pipeline](https://github.com/OjongBessongNKONGHO/weather-etl-pipeline) | Batch ETL — hourly weather data pipeline | Airflow, PostgreSQL, Docker |
 | [Kafka Streaming Pipeline](https://github.com/OjongBessongNKONGHO/kafka-streaming-pipeline) | Real-time streaming — Kafka producer/consumer | Kafka, Pydantic v2, PostgreSQL, Docker |
 | **AWS Data Platform** (this repo) | Cloud infrastructure for the above pipelines | Terraform, AWS, IaC |
-
-The EC2 instance in this project runs Docker and Python — ready to host the ETL and Kafka pipelines. The RDS PostgreSQL instance replaces the local Docker PostgreSQL used in Projects 1 and 2. The S3 data lake provides persistent storage for raw and processed weather data.
 
 ---
 
