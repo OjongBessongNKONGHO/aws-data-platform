@@ -19,3 +19,8 @@ All notable changes to this project are documented here.
 - Mermaid architecture diagram in README
 - Live AWS console screenshots in README
 - terraform destroy completed with zero charges
+
+## [1.0.1] - 2026-06-01
+
+### Improved
+- Added project roadmap: next steps include EKS cluster module and Glue ETL integration
