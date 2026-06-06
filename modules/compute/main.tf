@@ -101,6 +101,8 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 }
 
 # EC2 Instance — runs the data pipeline
+# Cost estimate: t3.micro = $0.0104/hour = ~$7.50/month (us-east-1)
+# Free tier eligible: 750 hours/month for 12 months
 resource "aws_instance" "pipeline" {
   ami                    = data.aws_ami.amazon_linux_2.id
   instance_type          = var.instance_type
@@ -170,6 +172,8 @@ resource "aws_instance" "pipeline" {
 }
 
 # Elastic IP — gives the EC2 instance a fixed public IP address
+# Cost estimate: $0.005/hour when associated with running instance = ~$3.60/month
+# Free when associated with a running instance in free tier
 resource "aws_eip" "pipeline" {
   instance = aws_instance.pipeline.id
   domain   = "vpc"

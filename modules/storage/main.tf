@@ -4,6 +4,9 @@
 # ─────────────────────────────────────────────────────────────
 
 # S3 Data Lake Bucket
+# Cost estimate: $0.023/GB/month (Standard storage, us-east-1)
+# PUT/GET requests: $0.005 per 1,000 PUT, $0.0004 per 1,000 GET
+# Free tier: 5GB storage, 20,000 GET, 2,000 PUT requests for 12 months
 resource "aws_s3_bucket" "data_lake" {
   bucket = var.bucket_name
 
@@ -47,6 +50,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "data_lake" {
 }
 
 # Lifecycle policy — automatically move data to cheaper storage tiers
+# Standard-IA: $0.0125/GB/month (saves ~46% vs Standard after 30 days)
+# Glacier: $0.004/GB/month (saves ~83% vs Standard after 60 days)
 resource "aws_s3_bucket_lifecycle_configuration" "data_lake" {
   bucket = aws_s3_bucket.data_lake.id
 

@@ -4,6 +4,7 @@
 # ─────────────────────────────────────────────────────────────
 
 # SNS Topic — sends alarm notifications to email
+# Cost estimate: $0.50 per 1 million notifications — effectively free at this scale
 resource "aws_sns_topic" "alerts" {
   name = "${var.project_name}-alerts"
 
@@ -147,8 +148,9 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   }
 }
 
-# ── CloudWatch Log Groups ─────────────────────────────────────
-
+# — CloudWatch Log Groups —
+# Cost estimate: $0.50/GB ingested, $0.03/GB stored/month
+# 30-day retention on pipeline logs, 14-day on EC2 logs — minimises storage cost
 # Pipeline application logs
 resource "aws_cloudwatch_log_group" "pipeline_logs" {
   name              = "/ojong-data-platform/pipeline"
@@ -175,6 +177,8 @@ resource "aws_cloudwatch_log_group" "ec2_logs" {
 
 # ── CloudWatch Dashboard ──────────────────────────────────────
 
+# CloudWatch Dashboard
+# Cost estimate: $3.00/dashboard/month — 1 dashboard = $3.00/month
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.project_name}-dashboard"
 

@@ -19,6 +19,10 @@ resource "aws_db_subnet_group" "main" {
 }
 
 # RDS PostgreSQL Instance
+# Cost estimate: db.t3.micro = $0.017/hour = ~$12.24/month (us-east-1)
+# Storage: gp2 $0.115/GB/month — 20GB = ~$2.30/month
+# Total estimated cost: ~$14.54/month
+# Free tier: 750 hours db.t3.micro + 20GB storage for 12 months
 resource "aws_db_instance" "postgres" {
   identifier        = "${var.project_name}-postgres"
   engine            = "postgres"

@@ -4,6 +4,7 @@
 # ─────────────────────────────────────────────────────────────
 
 # VPC — isolated network for the entire data platform
+# Cost estimate: VPC itself is free — charges apply to resources inside it
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
@@ -18,6 +19,7 @@ resource "aws_vpc" "main" {
 }
 
 # Internet Gateway — allows public subnets to reach the internet
+# Cost estimate: IGW itself is free — data transfer out costs $0.09/GB
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
@@ -107,6 +109,7 @@ resource "aws_route_table_association" "private" {
 }
 
 # Security Group — EC2 instance (allows SSH and HTTP)
+# Cost estimate: Security groups are free
 resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-ec2-sg"
   description = "Security group for the data pipeline EC2 instance"
