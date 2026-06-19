@@ -277,6 +277,52 @@ terraform destroy  # Removes all 41 resources — stops all charges
 
 ---
 
+## 🧹 Teardown Guide
+
+Tearing down correctly matters as much as deploying correctly — leaving resources running after testing is the most common way free-tier credits get burned unnecessarily.
+
+**1. Confirm what will be destroyed**
+
+```bash
+terraform plan -destroy
+```
+
+Review the plan output — it lists every resource Terraform will remove. For this project that's all 41 resources across networking, compute, database, storage and monitoring.
+
+**2. Run the destroy**
+
+```bash
+terraform destroy
+```
+
+Terraform prompts for confirmation — type `yes` to proceed. Destruction typically takes 3–5 minutes, with RDS taking the longest since AWS enforces a final snapshot step by default.
+
+**3. Verify nothing is left running**
+
+Check the AWS Console directly rather than trusting the CLI output alone:
+
+- **EC2** — no instances in `running` or `stopped` state
+- **RDS** — no database instances listed
+- **S3** — the bucket itself is deleted only if empty; Terraform does not force-delete objects inside it by default, so check the bucket is gone or empty
+- **Elastic IP** — no unattached Elastic IPs (these incur hourly charges even when not attached to a running instance)
+- **CloudWatch** — the dashboard and log group are removed; verify under Dashboards and Log Groups
+
+**4. Common teardown issues**
+
+- **S3 bucket not empty** — `terraform destroy` fails if the bucket has objects in it. Empty the bucket manually first (`aws s3 rm s3://bucket-name --recursive`) then retry.
+- **RDS final snapshot** — if `skip_final_snapshot` is not set to `true` in the database module, AWS creates a snapshot before deletion, which itself incurs storage cost until manually removed.
+- **Elastic IP left behind** — if `terraform destroy` is interrupted partway through, an Elastic IP can be left unattached and billed hourly. Check the EC2 → Elastic IPs console page after every destroy.
+
+**5. Confirm state is clean**
+
+```bash
+terraform show
+```
+
+An empty output confirms no resources remain in Terraform's state file.
+
+---
+
 ## 📊 Real Outputs After Apply
 
 ```hcl
