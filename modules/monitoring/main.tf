@@ -148,6 +148,37 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections_high" {
   }
 }
 
+# ── S3 Alarms ────────────────────────────────────────────────
+
+# S3 Bucket Size High — alerts when the data lake grows unexpectedly large.
+# BucketSizeBytes is published once per day by AWS, so this check
+# runs on a 24-hour period rather than the 5-minute period used for
+# EC2 and RDS metrics — there is no finer-grained data available.
+resource "aws_cloudwatch_metric_alarm" "s3_bucket_size_high" {
+  alarm_name          = "${var.project_name}-s3-bucket-size-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "BucketSizeBytes"
+  namespace           = "AWS/S3"
+  period              = 86400
+  statistic           = "Average"
+  threshold           = var.s3_bucket_size_threshold_bytes
+  alarm_description   = "S3 data lake bucket size exceeded ${var.s3_bucket_size_threshold_bytes} bytes — review lifecycle policy or storage growth"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    BucketName  = var.s3_bucket_name
+    StorageType = "StandardStorage"
+  }
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+  }
+}
+
 # — CloudWatch Log Groups —
 # Cost estimate: $0.50/GB ingested, $0.03/GB stored/month
 # 30-day retention on pipeline logs, 14-day on EC2 logs — minimises storage cost
@@ -246,6 +277,23 @@ resource "aws_cloudwatch_dashboard" "main" {
           period = 300
           metrics = [
             ["AWS/RDS", "FreeStorageSpace", "DBInstanceIdentifier", var.db_instance_id]
+          ]
+          view   = "timeSeries"
+          stat   = "Average"
+          region = "eu-west-3"
+        }
+      },
+      {
+        type   = "metric"
+        x      = 0
+        y      = 12
+        width  = 12
+        height = 6
+        properties = {
+          title  = "S3 Data Lake Bucket Size"
+          period = 86400
+          metrics = [
+            ["AWS/S3", "BucketSizeBytes", "BucketName", var.s3_bucket_name, "StorageType", "StandardStorage"]
           ]
           view   = "timeSeries"
           stat   = "Average"

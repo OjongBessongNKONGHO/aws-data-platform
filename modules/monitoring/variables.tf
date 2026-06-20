@@ -45,3 +45,8 @@ variable "rds_connections_threshold" {
   type        = number
   default     = 50
 }
+variable "s3_bucket_size_threshold_bytes" {
+  description = "S3 bucket size in bytes that triggers an alarm — default is 5GB"
+  type        = number
+  default     = 5368709120
+}
