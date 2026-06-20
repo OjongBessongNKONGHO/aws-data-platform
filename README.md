@@ -7,7 +7,7 @@
 ![Status](https://img.shields.io/badge/Status-Deployed-success?style=flat)
 ![CI](https://github.com/OjongBessongNKONGHO/aws-data-platform/actions/workflows/ci.yml/badge.svg)
 
-A production-grade cloud data platform provisioned entirely with Terraform on AWS eu-west-3 (Paris). A single `terraform apply` command deploys **41 AWS resources** across 5 modules: networking, compute, storage, database and monitoring — fully reproducible, version-controlled and destroyable with a single command.
+A production-grade cloud data platform provisioned entirely with Terraform on AWS eu-west-3 (Paris). A single `terraform apply` command deploys **42 AWS resources** across 5 modules: networking, compute, storage, database and monitoring — fully reproducible, version-controlled and destroyable with a single command.
 
 This is the third project in my Data Engineering portfolio. Projects 1 and 2 built real pipelines running locally in Docker. This project provisions the cloud infrastructure those pipelines would run on in production.
 
@@ -37,8 +37,8 @@ This is the third project in my Data Engineering portfolio. Projects 1 and 2 bui
 ## ⚡ What Gets Deployed
 
 ```
-terraform apply  →  41 resources created in ~5 minutes
-terraform destroy  →  41 resources deleted in ~3 minutes
+terraform apply  →  42 resources created in ~5 minutes
+terraform destroy  →  42 resources deleted in ~3 minutes
 ```
 
 | Layer | What Terraform Creates |
@@ -47,7 +47,7 @@ terraform destroy  →  41 resources deleted in ~3 minutes
 | **Compute** | EC2 t3.micro with Docker + Python pre-installed, Elastic IP, IAM role, 2 IAM policies |
 | **Storage** | S3 data lake with AES256 encryption, versioning, lifecycle policies, raw/processed/archive/logs folders |
 | **Database** | RDS PostgreSQL 15.10 db.t3.micro in private subnet, subnet group |
-| **Monitoring** | CloudWatch dashboard, 4 metric alarms, SNS topic, email subscription, 2 log groups |
+| **Monitoring** | CloudWatch dashboard, 5 metric alarms, SNS topic, email subscription, 2 log groups |
 
 ---
 
@@ -55,13 +55,13 @@ terraform destroy  →  41 resources deleted in ~3 minutes
 
 | Metric | Value |
 |---|---|
-| Total AWS resources | 41 — provisioned with a single terraform apply |
+| Total AWS resources | 42 — provisioned with a single terraform apply |
 | Deployment time | ~5 minutes |
 | Destroy time | ~3 minutes |
 | AWS region | eu-west-3 — Paris |
 | EC2 instance type | t3.micro — Docker and Python pre-installed via user_data |
 | RDS instance class | db.t3.micro — PostgreSQL 15.10 in private subnet |
-| CloudWatch alarms | 4 — EC2 CPU, EC2 status check, RDS CPU, RDS storage |
+| CloudWatch alarms | 5 — EC2 CPU, EC2 status check, RDS CPU, RDS storage, S3 bucket size |
 | Terraform modules | 5 — networking, compute, storage, database, monitoring |
 | Environments | dev deployed — prod environment configured and ready |
 | CI pipeline | terraform fmt and validate passing on every push |
@@ -95,7 +95,7 @@ flowchart TD
         end
 
         subgraph Monitoring
-            CW[📊 CloudWatch\n4 metric alarms\nDashboard]
+            CW[📊 CloudWatch\n5 metric alarms\nDashboard]
             SNS[📧 SNS Alerts\nEmail notifications]
         end
 
@@ -259,7 +259,7 @@ db_instance_class = "db.t3.micro"
 
 ```bash
 terraform init    # Download AWS provider
-terraform plan    # Preview 41 resources — no changes made
+terraform plan    # Preview 42 resources — no changes made
 terraform apply   # Deploy everything (~5 minutes)
 ```
 
@@ -272,7 +272,7 @@ ssh -i ~/.ssh/ojong-data-platform-key.pem ec2-user@YOUR_EC2_PUBLIC_IP
 **7. Destroy everything when done**
 
 ```bash
-terraform destroy  # Removes all 41 resources — stops all charges
+terraform destroy  # Removes all 42 resources — stops all charges
 ```
 
 ---
@@ -287,7 +287,7 @@ Tearing down correctly matters as much as deploying correctly — leaving resour
 terraform plan -destroy
 ```
 
-Review the plan output — it lists every resource Terraform will remove. For this project that's all 41 resources across networking, compute, database, storage and monitoring.
+Review the plan output — it lists every resource Terraform will remove. For this project that's all 42 resources across networking, compute, database, storage and monitoring.
 
 **2. Run the destroy**
 
@@ -360,6 +360,9 @@ Raw data moves to Infrequent Access after 30 days and Glacier after 60 days auto
 
 **Why `terraform destroy`?**
 Infrastructure as Code means the entire environment can be recreated from scratch at any time. Destroying and recreating is safer and cheaper than leaving resources running. This is also how staging environments work in production — spin up for testing, destroy after.
+
+**Why monitor S3 bucket size directly instead of relying on lifecycle policies alone?**
+The storage module's lifecycle policy controls cost per object, transitioning data to cheaper storage tiers as it ages — but it says nothing about whether the bucket as a whole is growing faster than expected. The monitoring module was designed from the start to take an `s3_bucket_name` input, but the alarm consuming it was never built in the initial pass — storage monitoring was scoped for EC2 and RDS first, with S3 left as a known gap to close. Adding the `BucketSizeBytes` alarm completes that scope: if the data lake grows past a defined threshold, an email alert fires before storage costs become a surprise on the bill.
 
 ---
 
