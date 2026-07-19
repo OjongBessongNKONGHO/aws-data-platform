@@ -27,3 +27,7 @@ output "internet_gateway_id" {
   description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.main.id
 }
+output "s3_vpc_endpoint_id" {
+  description = "ID of the S3 VPC Gateway Endpoint"
+  value       = aws_vpc_endpoint.s3.id
+}

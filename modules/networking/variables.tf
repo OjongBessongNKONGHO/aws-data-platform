@@ -31,3 +31,14 @@ variable "availability_zones" {
   type        = list(string)
   default     = ["eu-west-3a", "eu-west-3b"]
 }
+variable "aws_region" {
+  description = "AWS region — used to construct the S3 VPC endpoint service name"
+  type        = string
+  default     = "eu-west-3"
+}
+
+variable "tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
