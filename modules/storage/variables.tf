@@ -30,3 +30,7 @@ variable "processed_data_expiry_days" {
   type        = number
   default     = 90
 }
+variable "s3_vpc_endpoint_id" {
+  description = "ID of the S3 VPC Gateway Endpoint to attach the endpoint policy to"
+  type        = string
+}

@@ -39,11 +39,11 @@ module "networking" {
 
 # ── Storage ───────────────────────────────────────────────────
 module "storage" {
-  source = "./modules/storage"
-
-  project_name = var.project_name
-  environment  = var.environment
-  bucket_name  = var.bucket_name
+  source             = "./modules/storage"
+  project_name       = var.project_name
+  environment        = var.environment
+  bucket_name        = var.bucket_name
+  s3_vpc_endpoint_id = module.networking.s3_vpc_endpoint_id
 }
 
 # ── Compute ───────────────────────────────────────────────────

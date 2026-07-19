@@ -115,3 +115,45 @@ resource "aws_s3_object" "logs_folder" {
   key     = "logs/"
   content = ""
 }
+# ─────────────────────────────────────────────────────────────────────────────
+# S3 VPC Endpoint Policy
+# ─────────────────────────────────────────────────────────────────────────────
+# The endpoint policy controls which S3 operations are permitted through
+# the VPC endpoint. Without a policy, the endpoint allows access to ALL
+# S3 buckets in any AWS account — including buckets owned by other accounts,
+# which is a data exfiltration risk: malicious code running in your VPC
+# could write data to an attacker-controlled S3 bucket through the endpoint.
+#
+# This policy restricts the endpoint to only the data lake bucket in this
+# account. Traffic to any other bucket is denied at the endpoint level,
+# before it even reaches the bucket policy.
+#
+# Note: this resource attaches a policy to the endpoint created in the
+# networking module. The endpoint ID is passed in as a variable so the
+# storage module doesn't depend directly on the networking module — the
+# root module wires them together.
+resource "aws_vpc_endpoint_policy" "s3" {
+  vpc_endpoint_id = var.s3_vpc_endpoint_id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowDataLakeBucketOnly"
+        Effect    = "Allow"
+        Principal = "*"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+        ]
+        Resource = [
+          aws_s3_bucket.data_lake.arn,
+          "${aws_s3_bucket.data_lake.arn}/*",
+        ]
+      },
+    ]
+  })
+}

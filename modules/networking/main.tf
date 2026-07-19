@@ -177,3 +177,35 @@ resource "aws_security_group" "rds" {
     ManagedBy   = "Terraform"
   }
 }
+# ─────────────────────────────────────────────────────────────────────────────
+# S3 VPC Gateway Endpoint
+# ─────────────────────────────────────────────────────────────────────────────
+# A Gateway Endpoint routes S3 traffic through AWS's private network instead
+# of the public internet via the NAT gateway. Two concrete benefits:
+#
+# 1. Cost — NAT gateway charges $0.045/GB for data transfer. S3 traffic from
+#    private subnets normally goes: instance → NAT gateway → internet → S3.
+#    With a Gateway Endpoint: instance → endpoint → S3. NAT gateway is
+#    bypassed entirely for S3 traffic — zero data transfer cost on that path.
+#
+# 2. Security — traffic never leaves AWS's private network. No exposure to
+#    the public internet, no need to open outbound rules for S3 CIDR ranges.
+#
+# Gateway Endpoints (S3 and DynamoDB) are free — no hourly charge, no data
+# processing charge. Interface Endpoints (everything else) cost money.
+# This is a Gateway Endpoint.
+#
+# The endpoint is associated with the private route table — the public
+# subnets already have direct internet access via the IGW and don't need
+# the endpoint for cost savings (IGW traffic to S3 is free).
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = [aws_route_table.private.id]
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-s3-endpoint"
+  })
+}
